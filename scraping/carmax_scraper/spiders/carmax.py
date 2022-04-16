@@ -254,7 +254,7 @@ class CarMaxSpider(scrapy.Spider):
 
     def parse(self, response):
         for zipcode in self.zipcodes:
-            for step in range(0, 7000, 20):
+            for step in range(0, 10000, 20):
                 try:
                     url = f'https://www.carmax.com/cars/api/search/run?uri=/cars/all&skip={step}&take=20&zipCode={zipcode}&radius=radius-250&shipping=0&sort=best-match&scoringProfile=BestMatchScoreVariant3&visitorID=a3cb6bdc-30a8-450f-970e-fdaf1dba540a'
                     request = scrapy.Request(url, 

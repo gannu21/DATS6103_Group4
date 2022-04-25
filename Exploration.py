@@ -64,7 +64,7 @@ plt.show()
 # Currently there are of outliers. MSRP is compared for the price less than 80K
 
 # Draw boxplots of the above six metrics
-fig, ax = plt.subplots(2,3,figsize=(20,16))
+fig, ax = plt.subplots(2,3,figsize=(20,16), dpi=500)
 ax = ax.ravel()
 sns.boxplot(x='make', y='base_price', data=df_final, ax=ax[0]).set_title('Price Distribution by Make')
 sns.boxplot(x='cylinders', y='base_price', data=df_final, ax=ax[1]).set_title('Price Distribution by Cylinders')
@@ -80,6 +80,7 @@ for ax in fig.axes:
     plt.sca(ax)
     plt.xticks(rotation=90)
 fig.tight_layout()
+plt.savefig("Boxplot of the six metrics.png")
 plt.show()
 
 # %%

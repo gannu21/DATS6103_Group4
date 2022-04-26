@@ -89,7 +89,7 @@ plt.show()
 # %%
 # %%
 # Draw a scatterplot of the relationship between base_price (the minimum used car price) and the msrp (manufacturer's recommended price). Color is determined by "make" and size is determined by "mileage", up to 20.
-fig = px.scatter(df_final[(df_final.msrp!="nan") & (df_final.base_price < 150000)], 
+fig = px.scatter(df_final[(df_final.msrp!=0) & (df_final.base_price < 150000)], 
                 x = 'base_price',
                 y= 'msrp',color = 'make', 
                 hover_name = 'make', 
@@ -108,28 +108,18 @@ Brands = df_final.make.value_counts()[:5].index
 Selected = df_final[df_final.make.isin(Brands)]
 
 for brand in Brands:
-    # Analyzed by make(brand), the number of brands is the brands in the above Brands
+    # Analyzed by make(brand), the number of brands is euqal to the length of variables Brands
     fig, ax = plt.subplots(1, 3, figsize=(20, 10), dpi=500)
     fig.suptitle(f'Overall Breakdown of {brand}')
-    # Histogram of the top ten models
+    # Barplot of the top ten models
     Selected.loc[Selected.make == brand].model.value_counts()[:10].plot(kind='bar', ax=ax[0], title=f'Top 10 Models for {brand} By Inventory')
     # Draw a barplot of the relationship between fuel type and mrsp, the color is determined by Type
     sns.barplot(x='fuelType', y='msrp', hue='Type', data=Selected[Selected.make == brand], ax=ax[1], estimator=np.median, ci=False).set_title(f'Distribution of {brand} by Type')
-    # Draw a scatterplot of the relationship between mileage and msrp, the color is determined by yeargroup, The shape of the point is determined by Type, and the transparency of the point is 0.6
-    sns.scatterplot(x='mileage', y='msrp', data=Selected[Selected.make == brand], hue='yeargroup', ax=ax[2], style='Type', alpha=0.6).set_title(f'Mileage vs MSRP for {brand}')
+    # Draw a scatterplot of the relationship between mileage and base_price, the color is determined by Type, The shape of the point is determined by yeargroup, and the transparency of the point is 0.6
+    sns.scatterplot(x='mileage', y='base_price', data=Selected[Selected.make == brand], hue='Type', ax=ax[2], style='yeargroup', alpha=0.6).set_title(f'Mileage vs MSRP for {brand}')
     plt.tight_layout()
     plt.savefig(f"Plots of metrics-{brand}.png")
 plt.show()
-#Brands = ['Toyota','Chevrolet','Ford','Honda' ]
-#Selected = df_final.loc[((df_final.make=='Toyota') | (df_final.make=='Chevrolet') | (df_final.make =='Ford') | (df_final.make =='Honda')) & (df_final.msrp<70000) & (df_final.msrp>1000)]
-
-#for brand in Brands:
-    #fig, ax = plt.subplots(1, 3, figsize = (20,10))
-    #fig.suptitle(f'Overall Breakdown of {brand}')
-    #Selected.loc[Selected.make==brand].model.value_counts()[:10].plot(kind = 'bar',ax=ax[1], title = f'Top 10 Models for {brand} By Inventory')
-    #sns.barplot(x = 'fuelType', y = 'msrp', hue = 'Type', data = Selected[Selected.make==brand], ax = ax[0], estimator= np.median, ci = False).set_title(f'Distribution of {brand} by Type')
-    #sns.scatterplot(x = 'mileage' , y = 'msrp', data = Selected[Selected.make==brand], hue = 'yeargroup', ax = ax[2], style = 'Type', alpha= 0.6 ).set_title(f'Mileage vs MSRP for {brand}')
-    #plt.figure(plt.tight_layout())
 
 
 # %%
@@ -140,8 +130,10 @@ plt.show()
 # %%
 # Find the correlation coefficient matrix heat map (only for numerical data, the numbers in the square represent the size of the covariance)
 # Set palette
+plt.figure(dpi=500)
 cmap = sns.cubehelix_palette(start = 1.5, rot = 3, gamma = 0.8, as_cmap = True)
 ax = sns.heatmap(df_final.corr(), vmax = 1, cmap = cmap, annot = True, annot_kws={'size':5, 'weight':'bold'})
+plt.tight_layout()
 plt.savefig("The correlation coefficient matrix heat map.png")
 plt.show()
 
@@ -152,22 +144,22 @@ from statsmodels.formula.api import ols
 # Preprocessing, the general idea is to remove the situation with a small amount of data under a certain feature.
 # Because there are too many models, the first 20 are screened, and the accuracy of my test: 30<10<20=25
 data = df_final[df_final.model.isin(df_final.model.value_counts()[:20].index)]
-# The number of cylinders in the top three does not belong to the same order of magnitude as the others, so the number of cylinders in the top three is selected.
+# The car mumbers of prior three cylinders largely beyond others, so the number of cylinders in the top three is selected.
 data = data[data.cylinders.isin(data.cylinders.value_counts()[:3].index)]
 # Delete rows where mrsp is nan
 data = data.dropna(axis=0, subset=["msrp"])
 # Because most of the engineTypes are Gas, so filter Gas
 data = data[data.engineType == "Gas"]
 # Filter exteriorColor
-data = data[data.exteriorColor.isin(data.interiorColor.value_counts()[:7].index)]
+data = data[data.exteriorColor.isin(data.interiorColor.value_counts()[:6].index)]
 # Filter interiorColor
 data = data[data.interiorColor.isin(data.interiorColor.value_counts()[:3].index)]
 
 # Divide the train set and the test set, the train set is 70%, and the test set is 30%.
 # The latter random_state is the random number seed. When set to the same value, the train set and the test set obtained by random sampling are the same each time.
-train = data.sample(frac=0.7, random_state=1234).copy().reset_index(drop=True)
+train = data.sample(frac=0.7, random_state=1234).copy()
 test = data[~data.index.isin(train.index)].copy().reset_index(drop=True)
-
+train = train.reset_index(drop = True)
 # Build a least squares regression model with base_price as the dependent variable.
 # After ~ is an independent variable, and adding C means that the variable is a categorical variable.
 modelBasePrice = ols(
@@ -182,11 +174,11 @@ print(modelBasePriceFit.summary())
 # Put the base_price of the test set into the 'true_values' column.
 modelPredictions = pd.DataFrame(test.base_price.values, columns=['true_values'])
 # Put predicted values into 'test_values'.
-modelPredictions['test_values'] = modelBasePriceFit.predict(test)
+modelPredictions['predict_values'] = modelBasePriceFit.predict(test)
 # Difference between predicted value and actual value
-modelPredictions['diff'] = abs(modelPredictions['test_values'] - modelPredictions['true_values'])
+modelPredictions['diff'] = abs(modelPredictions['predict_values'] - modelPredictions['true_values'])
 # The ratio of the difference to the true value
-modelPredictions['diff_percent(%)'] = abs((modelPredictions['test_values'] - modelPredictions['true_values'])/modelPredictions['true_values']) * 100
+modelPredictions['diff_percent(%)'] = abs((modelPredictions['predict_values'] - modelPredictions['true_values'])/modelPredictions['true_values']) * 100
 # Sort the table by ratio from smallest to largest
 modelPredictions = modelPredictions.sort_values(by="diff_percent(%)")
 # Update index

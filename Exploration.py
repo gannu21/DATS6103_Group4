@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import plotly.express as px
 import plotly.graph_objects as go
+import plotly as py
 
 #%%
 df1 = pd.read_json('cardata.json')
@@ -18,7 +19,7 @@ df3 = pd.read_json('cardata4.json')
 df3 = df3.drop_duplicates(subset = ['vin'], keep = 'first')
 
 # %%
-df_final = pd.concat([df1,df2, df2])
+df_final = pd.concat([df1,df2, df3])
 
 # %%   ### Deleting all the duplicates
 ## Adding few extra columns
@@ -37,7 +38,7 @@ df_final.info()
 
 #%% Inventory lookup
 # Select 'make', 'cylinder', 'exteriorColor', 'interiorColor', 'engineType', 'model' and 'base_price'.
-fig, ax = plt.subplots(2,3,figsize=(20,16))
+fig, ax = plt.subplots(2,3,figsize=(20,16), dpi=500)
 ax = ax.ravel()
 # Draw the top 20 makes by quantity
 df_final.make.value_counts()[:20].plot(kind= 'bar', title = 'Total Car Inventory by Make', ax = ax[0])
@@ -57,6 +58,7 @@ for ax in fig.axes:
     plt.sca(ax)
     plt.xticks(rotation=90)
 fig.tight_layout()
+plt.savefig("Histogram of the six metrics.png")
 plt.show()
 
 # %% 
@@ -71,7 +73,8 @@ sns.boxplot(x='cylinders', y='base_price', data=df_final, ax=ax[1]).set_title('P
 sns.boxplot(x='exteriorColor', y='base_price', data=df_final, ax=ax[2]).set_title('Price Distribution by Exterior Color')
 sns.boxplot(x='interiorColor', y='base_price', data=df_final, ax=ax[3]).set_title('Price Distribution by Interior Color')
 sns.boxplot(x='engineType', y='base_price', data=df_final, ax=ax[4]).set_title('Price Distribution by Engine Type')
-sns.boxplot(x='model', y='base_price', data=df_final, ax=ax[5]).set_title('Price Distribution by model')
+model_20 = df_final[df_final.model.isin(df_final.model.value_counts()[:20].index)]
+sns.boxplot(x='model', y='base_price', data=model_20, ax=ax[5]).set_title('Price Distribution by model')
 
 #sns.boxplot(x='make',y='msrp',data = df_final[(df_final.msrp<80000) & (df_final.msrp>100)],ax=ax[0]).set_title('Price Distribution by Make')
 #sns.boxplot(x='cylinders',y='msrp',data = df_final[(df_final.cylinders>0) & (df_final.cylinders<9) & (df_final.msrp<80000)& (df_final.msrp>100)],ax=ax[1]).set_title('Price Distribution by Cylinders')
@@ -94,7 +97,7 @@ fig = px.scatter(df_final[(df_final.msrp!="nan") & (df_final.base_price < 150000
                 size = 'mileage', size_max = 20, 
                 )
 fig.update_layout(title_text='Baseprice vs MSRP', title_x=0.5)
-
+py.offline.plot(fig, filename="test.html")
 fig.show()
 
 # %% [markdown]
@@ -106,7 +109,7 @@ Selected = df_final[df_final.make.isin(Brands)]
 
 for brand in Brands:
     # Analyzed by make(brand), the number of brands is the brands in the above Brands
-    fig, ax = plt.subplots(1, 3, figsize=(20, 10))
+    fig, ax = plt.subplots(1, 3, figsize=(20, 10), dpi=500)
     fig.suptitle(f'Overall Breakdown of {brand}')
     # Histogram of the top ten models
     Selected.loc[Selected.make == brand].model.value_counts()[:10].plot(kind='bar', ax=ax[0], title=f'Top 10 Models for {brand} By Inventory')
@@ -114,7 +117,8 @@ for brand in Brands:
     sns.barplot(x='fuelType', y='msrp', hue='Type', data=Selected[Selected.make == brand], ax=ax[1], estimator=np.median, ci=False).set_title(f'Distribution of {brand} by Type')
     # Draw a scatterplot of the relationship between mileage and msrp, the color is determined by yeargroup, The shape of the point is determined by Type, and the transparency of the point is 0.6
     sns.scatterplot(x='mileage', y='msrp', data=Selected[Selected.make == brand], hue='yeargroup', ax=ax[2], style='Type', alpha=0.6).set_title(f'Mileage vs MSRP for {brand}')
-    plt.figure(plt.tight_layout())
+    plt.tight_layout()
+    plt.savefig(f"Plots of metrics-{brand}.png")
 plt.show()
 #Brands = ['Toyota','Chevrolet','Ford','Honda' ]
 #Selected = df_final.loc[((df_final.make=='Toyota') | (df_final.make=='Chevrolet') | (df_final.make =='Ford') | (df_final.make =='Honda')) & (df_final.msrp<70000) & (df_final.msrp>1000)]
@@ -130,6 +134,7 @@ plt.show()
 
 # %%
 plt.scatter(np.log(df_final['base_price']), df_final['cylinders'])
+plt.savefig("The relationship between base_price and cylinders.png")
 plt.show()
 
 # %%
@@ -137,6 +142,7 @@ plt.show()
 # Set palette
 cmap = sns.cubehelix_palette(start = 1.5, rot = 3, gamma = 0.8, as_cmap = True)
 ax = sns.heatmap(df_final.corr(), vmax = 1, cmap = cmap, annot = True, annot_kws={'size':5, 'weight':'bold'})
+plt.savefig("The correlation coefficient matrix heat map.png")
 plt.show()
 
 # %%

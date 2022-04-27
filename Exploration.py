@@ -114,9 +114,9 @@ for brand in Brands:
     # Barplot of the top ten models
     Selected.loc[Selected.make == brand].model.value_counts()[:10].plot(kind='bar', ax=ax[0], title=f'Top 10 Models for {brand} By Inventory')
     # Draw a barplot of the relationship between fuel type and mrsp, the color is determined by Type
-    sns.barplot(x='fuelType', y='msrp', hue='Type', data=Selected[Selected.make == brand], ax=ax[1], estimator=np.median, ci=False).set_title(f'Distribution of {brand} by Type')
+    sns.barplot(x='fuelType', y='msrp', data=Selected[Selected.make == brand], ax=ax[1], estimator=np.median, ci=False).set_title(f'Distribution of {brand} by Type')
     # Draw a scatterplot of the relationship between mileage and base_price, the color is determined by Type, The shape of the point is determined by yeargroup, and the transparency of the point is 0.6
-    sns.scatterplot(x='mileage', y='base_price', data=Selected[Selected.make == brand], hue='Type', ax=ax[2], style='yeargroup', alpha=0.6).set_title(f'Mileage vs MSRP for {brand}')
+    sns.scatterplot(x='mileage', y='base_price', data=Selected[Selected.make == brand], hue='Type', ax=ax[2], style='yeargroup', alpha=0.6).set_title(f'Mileage vs Base_price for {brand}')
     plt.tight_layout()
     plt.savefig(f"Plots of metrics-{brand}.png")
 plt.show()

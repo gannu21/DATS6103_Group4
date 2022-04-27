@@ -1,11 +1,12 @@
 #%%
-from hashlib import sha1
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 import plotly.express as px
 import plotly.graph_objects as go
+from sklearn import set_config
+
 
 #%%
 df1 = pd.read_json('cardata.json')
@@ -17,7 +18,7 @@ df3 = pd.read_json('cardata4.json')
 df3 = df3.drop_duplicates(subset = ['vin'], keep = 'first')
 
 # %%
-df_final = pd.concat([df1,df2, df2])
+df_final = pd.concat([df1,df2, df3])
 
 # %%   ### Deleting all the duplicates
 ## Adding few extra columns
@@ -86,4 +87,119 @@ for brand in Brands:
 
 # %%
 
+# %% [markdown]
+### Machine Learning
+# * For machine learning we decided to do modelling just on the Toyota brands. We have arround 2000 data points for toyota. 
+
+# %%
+data = df_final[df_final.groupby('make')['make'].transform('size') > 1000].drop([ 'stock_Number', 'vin', 'storeName', 'city', 'state', 'exteriorColor', 'interiorColor', 'storezip', 'PriceDiff', 'yeargroup'], axis=1)
+data = data.loc[(data.msrp<80000) & (data.msrp>2000)]
+# %%
+### further subsetting the data with the models that more more than 20 cars in inventory
+data.dropna(inplace=True)
+data = data.reset_index(drop=True)
+
+#%%
+plt.figure(figsize=(16,8))
+cmap = sns.diverging_palette(230, 20, as_cmap=True)
+mask = np.triu(np.ones_like(data.corr(), dtype=bool))
+sns.heatmap(data.corr(),mask = mask,  annot = True)
+
+
+### take away the baseprice as it has really high correlation and there is no way for new customer to know it. 
+#%%
+
+catcols = [ 'make', 'model','body', 'trasmission','engineType','fuelType', 'Type', 'year', 'mpgCity', 'mpgHighway','cylinders','horsepowerRpm', 'engineSize', 'engineTorque', 'engineTorqueRpm' ]
+print(catcols)
+print()
+Numcols = ['mileage', 'horsepower']
+print(Numcols)
+print()
+print(f'total columns in data : {data.shape[1]} \n total cols used : {len(catcols)+len(Numcols)}')
+Allcols = catcols + Numcols
+print('\n')
+print(Allcols)
+print(len(Allcols))
+
+
+
+X = data[Allcols]
+y = data['msrp']
+
+
+#%%
+for col in data.columns:
+    if data[col].nunique()<30:
+        print(col)
+        print('\n')
+        print(data[col].value_counts())
+        print('\n')
+
+# %%
+from sklearn.impute import SimpleImputer
+from sklearn.preprocessing import OneHotEncoder
+from sklearn.compose import  make_column_transformer
+from sklearn.pipeline import make_pipeline
+from sklearn.linear_model import LinearRegression
+from sklearn.model_selection import cross_val_score
+# %%
+
+# %%
+lm = LinearRegression()
+
+# set up preprocessing for categorical columns
+imp_constant = SimpleImputer(strategy='constant')
+ohe = OneHotEncoder(handle_unknown='ignore')
+
+# set up preprocessing for numeric columns
+imp_median = SimpleImputer(strategy='median', add_indicator=True)
+
+
+
+preprocess = make_column_transformer(
+                                    (make_pipeline(imp_constant, ohe), catcols),
+                                    (imp_median, Numcols),
+                                   )
+
+
+# %%
+pipeline = make_pipeline(preprocess, lm)
+# %%
+print(cross_val_score(pipeline, X, y, cv = 10, scoring= 'neg_root_mean_squared_error').mean())
+print(cross_val_score(pipeline, X, y, cv = 10, scoring= 'r2').mean())
+
+pipeline.fit(X, y)
+
+# %% [markdown]
+
+#### Model Evaluation
+make_trained = X.make.unique()   ### getting the list of the unique car make used to make model
+test_data = pd.read_json('newdata.json')  ### reading new file
+test_data = test_data.drop_duplicates(subset = 'vin')   ### dropping duplicate files
+test_data = test_data[test_data['make'].isin(make_trained)]  ### ensuring new testing data has only make from trained model
+test_data = test_data[~test_data['vin'].isin(df_final.vin.unique())]   ### ensuring new data doesn't have the 
+test_data = test_data[(test_data.msrp<80000)  & (test_data.msrp>2000)]
+print(test_data.head())
+print(test_data.shape[0])
+# %%
+predicted_price = pipeline.predict(test_data[Allcols])
+# %%
+test_data['predicted_price'] = predicted_price
+test_data['predicted_diff'] = test_data['predicted_price'] - test_data['msrp']
+
+# %%
+plt.figure(figsize=(20,16))
+fig = px.scatter(test_data,
+                x = 'msrp',
+                y= 'predicted_price',color = 'make', 
+                hover_name = 'make', 
+                hover_data = ['cylinders', 'trasmission', 'Type', 'mileage', 'year'],trendline= 'ols', 
+                width = 1200, height = 600
+                )
+fig.update_layout(title_text='Predicted vs Acutal', title_x=0.5)
+# %%
+sns.residplot('msrp','predicted_price',  test_data)
+# %%
+set_config(display = 'diagram')
+pipeline
 # %%

@@ -112,11 +112,11 @@ for brand in Brands:
     fig, ax = plt.subplots(1, 3, figsize=(20, 10), dpi=500)
     fig.suptitle(f'Overall Breakdown of {brand}')
     # Barplot of the top ten models
-    Selected.loc[Selected.make == brand].model.value_counts()[:10].plot(kind='bar', ax=ax[0], title=f'Top 10 Models for {brand} By Inventory')
+    Selected.loc[Selected.make == brand].model.value_counts()[:10].plot(kind='bar', ax=ax[0], title=f'Top 10 Models of {brand} By Inventory')
     # Draw a barplot of the relationship between fuel type and mrsp, the color is determined by Type
-    sns.barplot(x='fuelType', y='msrp', data=Selected[Selected.make == brand], ax=ax[1], estimator=np.median, ci=False).set_title(f'Distribution of {brand} by Type')
+    sns.barplot(x='fuelType', y='msrp', data=Selected[Selected.make == brand], ax=ax[1], estimator=np.median, ci=False).set_title(f'MSRP Distribution of {brand} by FuelType')
     # Draw a scatterplot of the relationship between mileage and base_price, the color is determined by Type, The shape of the point is determined by yeargroup, and the transparency of the point is 0.6
-    sns.scatterplot(x='mileage', y='base_price', data=Selected[Selected.make == brand], hue='Type', ax=ax[2], style='yeargroup', alpha=0.6).set_title(f'Mileage vs Base_price for {brand}')
+    sns.scatterplot(x='mileage', y='base_price', data=Selected[Selected.make == brand], hue='Type', ax=ax[2], style='yeargroup', alpha=0.6).set_title(f'Mileage vs Base_price of {brand}')
     plt.tight_layout()
     plt.savefig(f"Plots of metrics-{brand}.png")
 plt.show()

@@ -86,7 +86,7 @@ fig.tight_layout()
 plt.savefig("Boxplot of the six metrics.png")
 plt.show()
 
-# %%
+
 # %%
 # Draw a scatterplot of the relationship between base_price (the minimum used car price) and the msrp (manufacturer's recommended price). Color is determined by "make" and size is determined by "mileage", up to 20.
 fig = px.scatter(df_final[(df_final.msrp!=0) & (df_final.base_price < 150000)], 
@@ -201,4 +201,5 @@ print(modelBasePriceFit.params)
 money = 300000 
 # 300000 is just an example.
 print(df_final[df_final.base_price < money].Type.value_counts().index)
+# %%
 # %%

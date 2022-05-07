@@ -19,6 +19,8 @@ warnings.filterwarnings("ignore")
 #%%
 import plotly.express as px
 import plotly.graph_objects as go
+import plotly as py
+
 #%%  ### three dataframe scrapped on three different days. Combining all three files to make final file
 df1 = pd.read_json('midtermwork/cardata.json')
 df1 = df1.drop_duplicates(subset = ['vin'], keep = 'first')
@@ -26,15 +28,17 @@ df2 = pd.read_json('midtermwork/cardata2.json')
 df2 = df2.drop_duplicates(subset = ['vin'], keep = 'first')
 df3 = pd.read_json('midtermwork/cardata4.json')
 df3 = df3.drop_duplicates(subset = ['vin'], keep = 'first')
-df_final = pd.concat([df1,df2, df3])
+df_final = pd.concat([df1, df2, df3])
 
 #  %% [markdown]
 # * Deleting all the duplicates
 # * Adding few extra columns that might help in visualization
+df_final = df_final.reset_index(drop=True)
 df_final = df_final.drop_duplicates(subset = ['vin'], keep = 'first')
 df_final['PriceDiff'] = df_final['msrp'] - df_final['base_price']
 df_final['yeargroup'] = df_final['year'].apply(lambda x: '<3 years' if x>2019 else '>3 years')
 print(df_final.info())
+
 # %% [markdown]
 ### Ganesh Exploration
 #   * Lets looks at the inventory by make, cylinders and type
@@ -451,6 +455,7 @@ topandlast50.plot.barh(x='index', y =0, figsize = (10,20))
 
 # %%
 #Xuan linear reggression
+
 #%%
 # Do Linear regression using statsmodels from the last assignment.
 from statsmodels.formula.api import ols

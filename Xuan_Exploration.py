@@ -9,17 +9,13 @@ import plotly.graph_objects as go
 import plotly as py
 
 #%%
-df1 = pd.read_json('cardata.json')
+df1 = pd.read_json('midtermwork/cardata.json')
 df1 = df1.drop_duplicates(subset = ['vin'], keep = 'first')
-df2 = pd.read_json('cardata2.json')
+df2 = pd.read_json('midtermwork/cardata2.json')
 df2 = df2.drop_duplicates(subset = ['vin'], keep = 'first')
-
-#%%
-df3 = pd.read_json('cardata4.json')
+df3 = pd.read_json('midtermwork/cardata4.json')
 df3 = df3.drop_duplicates(subset = ['vin'], keep = 'first')
-
-# %%
-df_final = pd.concat([df1,df2, df3])
+df_final = pd.concat([df1, df2, df3])
 
 # %%   ### Deleting all the duplicates
 ## Adding few extra columns

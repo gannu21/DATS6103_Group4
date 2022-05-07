@@ -273,8 +273,3 @@ topandlast50.plot.barh(x='index', y =0, figsize = (10,20))
 
 # %%
 
-# %%
-
-# %%
-
-# %%

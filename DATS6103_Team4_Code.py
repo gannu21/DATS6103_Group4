@@ -38,6 +38,9 @@ from sklearn.metrics import r2_score, mean_squared_error
 import sklearn
 print('import complete ready to continiue')
 
+
+# %%[markdown]
+#### Data Preparation
 #%%  ### three dataframe scrapped on three different days. Combining all three files to make final file
 df1 = pd.read_json('midtermwork/cardata.json')
 df1 = df1.drop_duplicates(subset = ['vin'], keep = 'first')
@@ -276,16 +279,10 @@ print(np.exp(modelmsrpfit.params))
 print(np.exp(modelmsrpfit.conf_int()))
 
 # %% SMART QUESTIONS 1 - 3 [Adrienne]
-import pandas as pd
-import matplotlib.pyplot as plt
-import seaborn as sns
-import numpy as np
-import statsmodels.api as sm
-from statsmodels.formula.api import ols
 
 # %% Data Preprocessing for Smart Questions
 #red in data from json file
-cars = df_final
+cars = df_final.copy()
 # %% Data Summary
 print(cars.head())
 print(cars.tail())
